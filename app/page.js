@@ -1,15 +1,35 @@
-'use client'
+"use client";
 
 import Image from "next/image";
-import {useState, useEffect} from 'react'
-import {firestore} from '../firebase'
-import {Box, Modal, Typography, Stack, TextField, Button} from '@mui/material'
-import { collection, deleteDoc, doc, getDocs, getDoc,setDoc, query } from "firebase/firestore";
+import { useState, useEffect } from "react";
+import { firestore } from "../firebase";
+import {
+  Box,
+  Modal,
+  Typography,
+  Stack,
+  TextField,
+  Button,
+  InputAdornment,
+} from "@mui/material";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  getDoc,
+  setDoc,
+  query,
+} from "firebase/firestore";
+import SearchIcon from "@mui/icons-material/Search";
+import { Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 
 export default function Home() {
   const [inventory, setInventory] = useState([]);
   const [open, setOpen] = useState(false);
   const [itemName, setItemName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterOption, setFilterOption] = useState("");
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
@@ -61,6 +81,25 @@ export default function Home() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  const filteredInventory = inventory
+    .filter(({ name }) =>
+      name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (filterOption === "name") {
+        return a.name.localeCompare(b.name);
+      } else if (filterOption === "HIGH_TO_LOW") {
+        return b.quantity - a.quantity;
+      } else if (filterOption === "LOW_TO_HIGH") {
+        return a.quantity - b.quantity;
+      }
+      return 0;
+    });
+
+  const handleFilterChange = (event) => {
+    setFilterOption(event.target.value);
+  };
+
   return (
     <Box
       width="100vw"
@@ -70,6 +109,9 @@ export default function Home() {
       justifyContent="center"
       alignItems="center"
       gap={2}
+      sx={{
+        background: "radial-gradient(circle, #bec6f9, #aeb8f8,#8492f1,  #9ba7f3, #7686ef)", 
+      }}
     >
       <Modal open={open} onClose={handleClose}>
         <Box
@@ -77,7 +119,7 @@ export default function Home() {
           top="50%"
           left="50%"
           width={400}
-          bgcolor="white"
+          bgcolor="#c8cffa"
           border="2px solid black"
           boxShadow={24}
           p={4}
@@ -87,6 +129,7 @@ export default function Home() {
           sx={{
             transform: "translate(-50%,-50%)",
           }}
+          
         >
           <Typography variant="h6">Add Item</Typography>
           <Stack width="100%" direction="row" spacing={2}>
@@ -100,20 +143,22 @@ export default function Home() {
             />
             <Button
               variant="outlined"
+              sx={{ backgroundColor: "#536dfe", color: "#fff" }} // Updated button color
               onClick={() => {
                 addItem(itemName);
                 setItemName("");
                 handleClose();
               }}
             >
-              {" "}
               Add
             </Button>
           </Stack>
         </Box>
       </Modal>
+
       <Button
         variant="contained"
+        sx={{ backgroundColor: "#536dfe", color: "#fff" }} // Updated button color
         onClick={() => {
           handleOpen();
         }}
@@ -124,56 +169,99 @@ export default function Home() {
         <Box
           width="800px"
           height="100px"
-          bgcolor="#ADD8E6"
+          bgcolor="#c8cffa"
           display="flex"
           alignItems="center"
           justifyContent="center"
+          borderBottom="1px solid black"
         >
           <Typography variant="h2" color="#333">
             Inventory Items
           </Typography>
         </Box>
-        
-      
-      <Stack width="800px" height="300px" spacing={2} overflow="auto">
-        {inventory.map(({ name, quantity }) => (
-          <Box
-            key={name}
-            width="100%"
-            minHeight="150px"
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            bgcolor="#f0f0f0"
-            padding={5}
-          >
-            <Typography variant="h3" color="#333" textAlign="center">
-              {name.charAt(0).toUpperCase() + name.slice(1)}
-            </Typography>
-            <Typography variant="h3" color="#333" textAlign="center">
-              {quantity}
-            </Typography>
-            <Stack direction="row" spacing={2}>
-            <Button
-              variant="contained"
-              onClick={() => {
-                addItem(name);
-              }}
+        <Box width="800px" mb={2} mt={2} pl={2} pr={2}>
+          <TextField
+            variant="outlined"
+            fullWidth
+            
+            placeholder="Search items..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+        <Box
+          width="100%"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          
+        >
+          <FormControl variant="outlined" sx={{ minWidth: 200, mb: 2 }}>
+            <InputLabel id="filter-label">Filter by Category</InputLabel>
+            <Select
+              labelId="filter-label"
+              value={filterOption}
+              onChange={handleFilterChange}
+              label="Filter by Category"
             >
-              Add
-            </Button>
-            <Button
-              variant="contained"
-              onClick={() => {
-                removeItem(name);
-              }}
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              <MenuItem value="name">Name (A - Z)</MenuItem>
+              <MenuItem value="HIGH_TO_LOW">Quantity (High to Low)</MenuItem>
+              <MenuItem value="LOW_TO_HIGH">Quantity (Low to High)</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
+        <Stack width="800px" height="300px" overflow="auto">
+          {filteredInventory.map(({ name, quantity }) => (
+            <Box
+              key={name}
+              width="100%"
+              minHeight="120px"
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              bgcolor="#c8cffa"
+              padding={5}
+              borderBottom="1px solid black"
+              borderTop="1px solid black"
             >
-              Remove
-            </Button>
-            </Stack>
-          </Box>
-        ))}
-      </Stack>
+              <Typography variant="h3" color="#333" textAlign="center">
+                {name.charAt(0).toUpperCase() + name.slice(1)}
+              </Typography>
+              <Typography variant="h3" color="#333" textAlign="center">
+                {quantity}
+              </Typography>
+              <Stack direction="row" spacing={2}>
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    addItem(name);
+                  }}
+                >
+                  Add
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    removeItem(name);
+                  }}
+                >
+                  Remove
+                </Button>
+              </Stack>
+            </Box>
+          ))}
+        </Stack>
       </Box>
     </Box>
   );
