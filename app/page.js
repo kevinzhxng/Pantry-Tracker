@@ -1,25 +1,10 @@
-"use client";
+'use client'
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
-import { firestore } from "@/firebase";
-import {
-  Box,
-  Button,
-  Modal,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  getDoc,
-  query,
-  setDoc,
-} from "firebase/firestore";
+import {useState, useEffect} from 'react'
+import {firestore} from '../firebase'
+import {Box, Modal, Typography, Stack, TextField, Button} from '@mui/material'
+import { collection, deleteDoc, doc, getDocs, getDoc,setDoc, query } from "firebase/firestore";
 
 export default function Home() {
   const [inventory, setInventory] = useState([]);
@@ -148,6 +133,7 @@ export default function Home() {
             Inventory Items
           </Typography>
         </Box>
+        
       
       <Stack width="800px" height="300px" spacing={2} overflow="auto">
         {inventory.map(({ name, quantity }) => (
