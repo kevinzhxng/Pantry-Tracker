@@ -176,7 +176,7 @@ export default function Home() {
           borderBottom="1px solid black"
         >
           <Typography variant="h2" color="#333">
-            Inventory Items
+            Pantry Items
           </Typography>
         </Box>
         <Box width="800px" mb={2} mt={2} pl={2} pr={2}>
